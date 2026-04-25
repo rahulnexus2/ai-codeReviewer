@@ -1,8 +1,10 @@
 import passport from "passport";
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 import pool from "../database/db.js"
+import jwt from "jsonwebtoken"
 import dotenv from "dotenv"
 dotenv.config()
+
 
 passport.use(
   new GoogleStrategy({

@@ -1,10 +1,13 @@
 import pool from "../database/db.js"
 
+
+
 const createTable=async()=>{
   try{
-    await pool.querry(`
+    await pool.query(`
       CREATE TABLE IF NOT EXISTS users (
         id SERIAL PRIMARY KEY,
+         google_id TEXT UNIQUE,
         name TEXT,
         email TEXT UNIQUE,
         avatar TEXT,
@@ -13,9 +16,11 @@ const createTable=async()=>{
     `);
     console.log("table created ")
   }catch(error){
-    console.log(error);   
+    console.error("❌ table creation failed", error.message);   
   }
 }
 
 
-createTable()
+
+export default createTable
+

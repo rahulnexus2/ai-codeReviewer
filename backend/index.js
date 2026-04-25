@@ -2,24 +2,23 @@ import express from "express";
 import dotenv from "dotenv"
 dotenv.config()
 import passport from "./config/passport.js";
-import session from "express-session";
+
+import createTable from "./models/userSchema.js"
+import jwt from "jsonwebtoken";
+import cookieParser from "cookie-parser";
+
+await createTable()
 
 
 
 const port =8000
 const app=express()
 
+app.use(cookieParser());
 
-app.use(
-  session({
-    secret: "secretkey",
-    resave: false,
-    saveUninitialized: true,
-  })
-);
 
 app.use(passport.initialize());
-app.use(passport.session());
+
 
 
 app.get('/',(req,res)=>{
@@ -31,11 +30,28 @@ app.get('/auth/google',passport.authenticate("google", { scope: ["profile", "ema
 app.get(
   "/auth/google/callback",
   passport.authenticate("google", {
+    session:false,
     failureRedirect: "/login",
   }),
   (req, res) => {
+    const user = req.user;
+     const token = jwt.sign(
+      { id: user.id, email: user.email },
+      process.env.JWT_SECRET,
+      { expiresIn: "1d" }
+    );
+
+    console.log("SETTING COOKIE...");
+     res.cookie("token", token, {
+      httpOnly: true,
+      secure: false, // true in production (HTTPS)
+        sameSite: "lax",
+        
+    });
+     
+    return res.redirect("http://localhost:8000");
     
-    res.send("Google Login Successful");
+   
   }
 );
 
