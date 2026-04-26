@@ -1,6 +1,6 @@
 import express from "express"
 import cookieParser from "cookie-parser";
-import passport from "./config/passport.js";
+import passport from "../config/passport.js";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv"
 dotenv.config()
@@ -9,13 +9,11 @@ import authMiddleware from "../middlewares/authMiddleware.js";
 
 const router =express.Router();
 
-app.use(cookieParser());
 
-app.use(passport.initialize());
+router.get('/google',
+  passport.authenticate("google", { scope: ["profile", "email"] }))
 
-app.get('/google',passport.authenticate("google", { scope: ["profile", "email"] }))
-
-app.get(
+router.get(
   "/google/callback",
   passport.authenticate("google", {
     session:false,
@@ -45,12 +43,6 @@ app.get(
   }
 );
 
-
-
-
-
-
-const router = express.Router();
 
 router.post("/logout", authMiddleware, async (req, res) => {
   try {
