@@ -6,8 +6,11 @@ const geniAi= new GoogleGenerativeAI(process.env.GEMINI_KEY);
 
 export const generateResponse=async(userInput)=>{
   try{
-    const model=geniAi.getGenerativeModel({
-      model:"gemini-2.5-flash"
+
+  
+    
+   const model=geniAi.getGenerativeModel({
+    model: "gemini-2.5-flash"
     })
 
     const prompt=`You are a senior software engineer and code reviewer.

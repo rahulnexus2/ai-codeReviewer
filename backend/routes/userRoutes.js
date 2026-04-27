@@ -5,8 +5,11 @@ const router=express.Router();
 
 
 router.get("/profile",authMiddleware,(req,res)=>{
+
+  console.log(req.user)
+
   res.json({
-    sucess:true,
+    success:true,
     user:req.user
   })
 

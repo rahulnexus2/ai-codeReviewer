@@ -1,7 +1,5 @@
 import pool from "../database/db.js"
 
-
-
 const createTable=async()=>{
   try{
     await pool.query(`

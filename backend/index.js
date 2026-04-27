@@ -8,13 +8,16 @@ import codeReview from "./routes/codeReview.js"
 
 
 
+
+
 await createTable();
 
 const port =8000
 const app=express()
 
 
-app.use("/code",express.text({ type: "*/*" }),codeReview)
+
+//app.use("/code",express.text({ type: "*/*" }),codeReview)
 
 app.use(express.json())
 
@@ -26,6 +29,8 @@ app.get('/',(req,res)=>{
 
 app.use("/auth",authGoogle)
 app.use("/user",userRoutes)
+app.use("/code",codeReview)
+
 
 
 app.listen(port,()=>{
