@@ -5,19 +5,18 @@ import createTable from "./models/userSchema.js"
 import userRoutes from "./routes/userRoutes.js"
 import authGoogle from "./routes/authGoogle.js"
 import codeReview from "./routes/codeReview.js"
-
-
-
+import createCodeTable from "./models/codeSchema.js";
+import codeCrud from "./routes/codeCrud.js"
 
 
 await createTable();
+await createCodeTable();
 
 const port =8000
 const app=express()
 
-
-
 //app.use("/code",express.text({ type: "*/*" }),codeReview)
+
 
 app.use(express.json())
 
@@ -26,10 +25,10 @@ app.get('/',(req,res)=>{
 })
 
 
-
 app.use("/auth",authGoogle)
 app.use("/user",userRoutes)
 app.use("/code",codeReview)
+app.use("/codereview",codeCrud)
 
 
 

@@ -2,10 +2,11 @@ import express from "express"
 import { generateResponse } from "../ai/geminiResEngine.js"
 import authMiddleware from "../middlewares/authMiddleware.js";
 import pool from "../database/db.js";
+import reviewLimiter from "../middlewares/ratelimiter.js";
 
 const router=express.Router();
 
-router.post('/review',authMiddleware,async(req,res)=>{
+router.post('/review',reviewLimiter,authMiddleware,async(req,res)=>{
   try{  
   
   const {language ,original_code}=req.body;
@@ -26,9 +27,11 @@ router.post('/review',authMiddleware,async(req,res)=>{
     
     }
 
-    console.log(original_code)
+    console.log(original_code,language)
 
     const user_id=req.user.id;
+    console.log(user_id);
+    
 
     const result =await generateResponse(original_code );
     if (!result.success || !result.data) {
@@ -40,13 +43,13 @@ router.post('/review',authMiddleware,async(req,res)=>{
     const dbResult=await pool.query(` 
       INSERT INTO code (user_id,language,original_code,ai_feedback)
       VALUES ($1, $2, $3, $4)
-      RETURNING *`
+      RETURNING *`,
       [user_id, language, original_code, ai_feedback]
     )
 
-    if(!result.success){
-      return res.status(500).json({error:result.error})
-    }
+    if (!dbResult) {
+  return res.status(500).json({ error: "DB insert failed" });
+}
 
 
 

@@ -1,25 +1,29 @@
-import pool from "../database/db";
+import pool from "../database/db.js";
 
 
-const createCodeTable=async()=>{
-  try{
+const createCodeTable = async () => {
+  try {
     await pool.query(`
-      CREATE TABLE IF NOT EXIST code(
-      id PRIMARY KEY,
-      CONSTRAINT fk_user
-      FOREIGN KEY (user_id)
-      REFERENCES users(id)
-      ON DELETE CASCADE,
-      language STRING,
-      orignal_code TEXT,
-      ai_feedback JSONB,
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP 
+      CREATE TABLE IF NOT EXISTS code (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER,
+        language TEXT,
+        original_code TEXT,
+        ai_feedback JSONB,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+        CONSTRAINT fk_user
+        FOREIGN KEY (user_id)
+        REFERENCES users(id)
+        ON DELETE CASCADE
       )
-      
-      
-      `)
+    `);
 
-  }catch(error){
-
+    console.log("✅ Code table created successfully");
+  } catch (error) {
+    console.error("❌ table creation failed", error.message);
   }
-}
+};
+
+
+export default createCodeTable
