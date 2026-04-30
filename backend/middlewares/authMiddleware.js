@@ -5,23 +5,11 @@ dotenv.config()
 
 const authMiddleware=async (req,res,next)=>{
   try{
-  const authHeader=req.headers.authorization;
+  const token=req.cookies.token
+  console.log(token);
   
-
-  if(!authHeader)
-  {
-    return res.status(401).json({message:"no token passed "});
-  }
-
-  if (!authHeader.startsWith("Bearer ")) {
-      return res.status(401).json({ message: "Invalid token format" });
-    }
-
-  const token = authHeader.split(" ")[1];
- 
   const decoded = jwt.verify(token, process.env.JWT_SECRET);
- 
-  
+   
 
   const result = await pool.query(
       "SELECT id, email, name FROM users WHERE id = $1",

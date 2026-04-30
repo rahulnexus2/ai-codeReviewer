@@ -34,11 +34,11 @@ router.get(
      res.cookie("token", token, {
       httpOnly: true,
       secure: false, 
-        sameSite: "lax",
+      sameSite: "lax",
         
     });
      
-    return res.redirect("http://localhost:8000");    
+    return res.redirect("http://localhost:5173/home");    
    
   }
 );

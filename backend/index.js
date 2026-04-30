@@ -7,6 +7,8 @@ import authGoogle from "./routes/authGoogle.js"
 import codeReview from "./routes/codeReview.js"
 import createCodeTable from "./models/codeSchema.js";
 import codeCrud from "./routes/codeCrud.js"
+import cors from "cors"
+import cookieParser from "cookie-parser";
 
 
 await createTable();
@@ -16,19 +18,26 @@ const port =8000
 const app=express()
 
 //app.use("/code",express.text({ type: "*/*" }),codeReview)
-
+app.use(cookieParser())
 
 app.use(express.json())
+app.use(cors({
+  origin:"http://localhost:5173",
+  credentials:true
+}))
 
 app.get('/',(req,res)=>{
   res.send('hey welome to my app')
 })
 
 
+
+
 app.use("/auth",authGoogle)
 app.use("/user",userRoutes)
 app.use("/code",codeReview)
 app.use("/codereview",codeCrud)
+
 
 
 
