@@ -1,28 +1,70 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import Editor from '@monaco-editor/react'
 import api from '../services/api'
 
 const AI_MODELS = [
-  { value: 'hugging-face', label: ' Llama3.1' },
-  { value: 'gemini', label: 'gemini-flash-2.5' },
-  { value: 'grok', label: 'grok' },
-  
+  { value: 'hugging-face', label: 'Llama 3.1' },
+  { value: 'gemini', label: 'Gemini Flash' },
+  { value: 'groq', label: 'Groq Beta' },
 ]
 
-const SEVERITY = {
-  high:   { border: 'border-l-red-500',    bg: 'bg-red-500/5',    text: 'text-red-400',    dot: 'bg-red-500',    label: 'HIGH' },
-  medium: { border: 'border-l-yellow-500', bg: 'bg-yellow-500/5', text: 'text-yellow-400', dot: 'bg-yellow-500', label: 'MEDIUM' },
-  low:    { border: 'border-l-green-500',  bg: 'bg-green-500/5',  text: 'text-green-400',  dot: 'bg-green-500',  label: 'LOW' },
+const ScoreCircle = ({ score }) => {
+  const [animatedScore, setAnimatedScore] = useState(0)
+  
+  useEffect(() => {
+    const timer = setTimeout(() => setAnimatedScore(score), 100)
+    return () => clearTimeout(timer)
+  }, [score])
+
+  const radius = 40
+  const circumference = 2 * Math.PI * radius
+  const strokeDashoffset = circumference - (animatedScore / 100) * circumference
+  
+  const color = animatedScore >= 80 ? 'text-[#22c55e]' : animatedScore >= 50 ? 'text-[#eab308]' : 'text-[#ef4444]'
+  
+  return (
+    <div className="relative inline-flex items-center justify-center my-4">
+      <svg className="w-28 h-28 transform -rotate-90">
+        <circle className="text-[#21262d]" strokeWidth="8" stroke="currentColor" fill="transparent" r={radius} cx="56" cy="56" />
+        <circle 
+          className={`${color} transition-all duration-1000 ease-out`} 
+          strokeWidth="8" 
+          strokeDasharray={circumference} 
+          strokeDashoffset={strokeDashoffset} 
+          strokeLinecap="round" 
+          stroke="currentColor" 
+          fill="transparent" 
+          r={radius} 
+          cx="56" 
+          cy="56" 
+        />
+      </svg>
+      <span className="absolute text-3xl font-bold text-white">{animatedScore}</span>
+    </div>
+  )
+}
+
+const SeverityBadge = ({ type }) => {
+  const styles = {
+    error: 'bg-[#ef4444]/10 text-[#ef4444] border-[#ef4444]/20',
+    warning: 'bg-[#eab308]/10 text-[#eab308] border-[#eab308]/20',
+    info: 'bg-[#3b82f6]/10 text-[#3b82f6] border-[#3b82f6]/20'
+  }
+  
+  return (
+    <span className={`text-[10px] uppercase tracking-wider font-semibold px-2 py-0.5 rounded-full border ${styles[type] || styles.info}`}>
+      {type}
+    </span>
+  )
 }
 
 export default function CodeEditor() {
-  const [value, setValue] = useState('')
-  const [model, setModel] = useState('gemini-flash-2.5')
+  const [value, setValue] = useState('// Paste your code here...')
+  const [model, setModel] = useState('gemini')
   const [output, setOutput] = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
-  const [activeTab, setActiveTab] = useState('issues')
-  const [copied, setCopied] = useState(false)
+  const [expandedIssue, setExpandedIssue] = useState(null)
 
   const handleSubmit = async () => {
     if (!value?.trim()) return
@@ -31,44 +73,30 @@ export default function CodeEditor() {
     setOutput(null)
     try {
       const res = await api.post('/code/review', { model, original_code: value }, { timeout: 60000 })
-      const review = res.data.data.ai_feedback
-      setOutput(review)
-      setActiveTab(review.issues?.length > 0 ? 'issues' : 'improvements')
+      setOutput(res.data.data.ai_feedback)
     } catch (err) {
       setError(err.response?.data?.error || 'Something went wrong. Please try again.')
     } finally {
       setLoading(false)
     }
   }
-    const copyCode = () => {
-    navigator.clipboard.writeText(output?.optimizedCode || '')
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
-  }
-
-  const tabs = [
-    { id: 'issues',        label: 'Issues',        count: output?.issues?.length ?? 0 },
-    { id: 'improvements',  label: 'Improvements',  count: output?.improvements?.length ?? 0 },
-    { id: 'code',          label: 'Optimized Code', count: output?.optimizedCode ? 1 : 0 },
-  ]
 
   return (
-    <div className="min-h-screen bg-gray-950 text-slate-200 px-4 py-8 md:px-8">
-      <div className="max-w-4xl mx-auto">
-
-        {/* Header */}
-        <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
-          <h1 className="text-xl font-bold bg-gradient-to-r from-violet-400 to-blue-400 bg-clip-text text-transparent tracking-tight">
-            ⚡ Code Reviewer
-          </h1>
+    <div className="flex flex-col md:flex-row h-[calc(100vh-56px)] bg-[#0d1117]">
+      
+      {/* ── Left Side: Editor (70%) ── */}
+      <div className={`flex flex-col ${output ? 'md:w-[70%]' : 'w-full'} transition-all duration-300 border-r border-[#30363d]`}>
+        
+        {/* Toolbar */}
+        <div className="flex items-center justify-between px-4 h-12 bg-[#161b22] border-b border-[#30363d]">
+          <div className="flex items-center gap-2">
+            <span className="text-gray-400 text-sm font-medium">main.js</span>
+          </div>
           <div className="flex items-center gap-3">
-            <span className="text-xs font-semibold uppercase tracking-widest text-slate-500">
-             Choose Models
-            </span>
             <select
               value={model}
               onChange={e => setModel(e.target.value)}
-              className="bg-gray-900 text-slate-200 border border-gray-700 rounded-lg px-3 py-1.5 text-sm font-medium outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent cursor-pointer transition"
+              className="bg-[#0d1117] text-gray-300 border border-[#30363d] rounded px-2 py-1 text-xs font-medium focus:outline-none focus:border-blue-500 cursor-pointer"
             >
               {AI_MODELS.map(l => (
                 <option key={l.value} value={l.value}>{l.label}</option>
@@ -77,42 +105,35 @@ export default function CodeEditor() {
           </div>
         </div>
 
-        {/* Editor */}
-        <div className="rounded-xl overflow-hidden border border-gray-800 shadow-2xl mb-4">
-          {/* Traffic lights bar */}
-          <div className="bg-gray-900 px-4 py-2.5 flex items-center gap-2 border-b border-gray-800">
-            <span className="w-3 h-3 rounded-full bg-red-500" />
-            <span className="w-3 h-3 rounded-full bg-yellow-500" />
-            <span className="w-3 h-3 rounded-full bg-green-500" />
-            <span className="ml-3 text-xs text-gray-500 font-mono">{model}</span>
-          </div>
+        {/* Monaco */}
+        <div className="flex-1 relative">
+          {error && (
+            <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10 bg-[#ef4444]/10 border border-[#ef4444]/20 text-[#ef4444] px-4 py-2 rounded-md text-sm flex items-center gap-2 shadow-lg">
+              <span>⚠️</span> {error}
+            </div>
+          )}
           <Editor
-            height="55vh"
             theme="vs-dark"
-            AI_MODELS={model}
             value={value}
             onChange={v => setValue(v || '')}
             options={{
-              fontSize: 13,
-              fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
+              fontSize: 14,
+              fontFamily: "var(--font-mono)",
               minimap: { enabled: false },
+              padding: { top: 16 },
+              lineNumbers: 'on',
               scrollBeyondLastLine: false,
-              automaticLayout: true,
-              padding: { top: 16, bottom: 16 },
-              renderLineHighlight: 'line',
+              wordWrap: 'on'
             }}
           />
         </div>
 
-        {/* Footer bar */}
-        <div className="flex items-center justify-between mb-8 flex-wrap gap-3">
-          <span className="text-xs text-gray-600 font-mono">
-            {value.length} chars · {value.split('\n').length} lines
-          </span>
+        {/* Footer */}
+        <div className="flex items-center justify-end px-4 h-14 bg-[#161b22] border-t border-[#30363d]">
           <button
             onClick={handleSubmit}
             disabled={loading || !value?.trim()}
-            className="flex items-center gap-2 px-6 py-2.5 rounded-lg font-semibold text-sm bg-gradient-to-r from-violet-600 to-blue-600 hover:from-violet-500 hover:to-blue-500 text-white shadow-lg shadow-violet-900/30 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 hover:-translate-y-0.5 active:translate-y-0"
+            className="flex items-center gap-2 px-5 py-1.5 bg-[#238636] hover:bg-[#2ea043] text-white text-sm font-medium rounded-md border border-[rgba(240,246,252,0.1)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? (
               <>
@@ -124,142 +145,97 @@ export default function CodeEditor() {
             )}
           </button>
         </div>
+      </div>
 
-        {/* Error */}
-        {error && (
-          <div className="flex items-center gap-3 bg-red-500/10 border border-red-500/20 text-red-400 rounded-xl px-4 py-3 mb-6 text-sm">
-            <span>⚠️</span>
-            {error}
+      {/* ── Right Side: Results (30%) ── */}
+      {output && (
+        <div className="w-full md:w-[30%] flex flex-col bg-[#0d1117] overflow-y-auto animate-in slide-in-from-right duration-300">
+          
+          {/* Score & Summary */}
+          <div className="p-6 flex flex-col items-center border-b border-[#30363d] bg-[#161b22]">
+            <h2 className="text-gray-400 text-xs font-semibold uppercase tracking-widest mb-2">Review Score</h2>
+            <ScoreCircle score={output.score || 0} />
+            <p className="text-sm text-gray-300 text-center leading-relaxed mt-2">
+              {output.summary}
+            </p>
           </div>
-        )}
 
-        {/* Review Output */}
-        {output && (
-          <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
+          {/* Issues List */}
+          <div className="p-4">
+            <h3 className="text-white text-sm font-medium mb-4 flex items-center justify-between">
+              Identified Issues
+              <span className="bg-[#21262d] text-gray-400 px-2 py-0.5 rounded-full text-xs">
+                {output.issues?.length || 0}
+              </span>
+            </h3>
 
-            {/* Summary */}
-            <div className="flex gap-4 items-start px-6 py-5 border-b border-gray-800">
-              <div className="w-9 h-9 rounded-lg bg-violet-500/10 border border-violet-500/20 flex items-center justify-center text-base flex-shrink-0">
-                📋
-              </div>
-              <div>
-                <p className="text-xs font-bold uppercase tracking-widest text-violet-400 mb-1">
-                  Summary
-                </p>
-                <p className="text-sm text-slate-400 leading-relaxed">{output.summary}</p>
-              </div>
-            </div>
-
-            {/* Tabs */}
-            <div className="flex border-b border-gray-800 px-4 gap-1">
-              {tabs.map(tab => (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center gap-2 px-3 py-3.5 text-xs font-semibold border-b-2 transition-colors -mb-px ${
-                    activeTab === tab.id
-                      ? 'border-violet-500 text-violet-400'
-                      : 'border-transparent text-slate-500 hover:text-slate-300'
-                  }`}
-                >
-                  {tab.label}
-                  {tab.count > 0 && (
-                    <span className={`text-xs px-1.5 py-0.5 rounded-full font-bold ${
-                      activeTab === tab.id
-                        ? 'bg-violet-500/20 text-violet-400'
-                        : 'bg-gray-800 text-slate-500'
-                    }`}>
-                      {tab.count}
-                    </span>
-                  )}
-                </button>
-              ))}
-            </div>
-
-            {/* Tab Content */}
-            <div className="p-6">
-
-              {/* Issues Tab */}
-              {activeTab === 'issues' && (
-                output.issues?.length > 0 ? (
-                  <div className="space-y-3">
-                    {output.issues.map((issue, i) => {
-                      const sev = SEVERITY[issue.severity] || SEVERITY.low
-                      return (
-                        <div key={i} className={`border-l-4 rounded-lg p-4 ${sev.border} ${sev.bg}`}>
-                          <div className={`flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider mb-2 ${sev.text}`}>
-                            <span className={`w-1.5 h-1.5 rounded-full ${sev.dot}`} />
-                            {sev.label}
+            {output.issues?.length > 0 ? (
+              <div className="space-y-3">
+                {output.issues.map((issue, idx) => {
+                  const isExpanded = expandedIssue === idx
+                  return (
+                    <div 
+                      key={idx} 
+                      className="bg-[#161b22] border border-[#30363d] rounded-md overflow-hidden"
+                    >
+                      {/* Issue Header */}
+                      <button 
+                        onClick={() => setExpandedIssue(isExpanded ? null : idx)}
+                        className="w-full flex items-start gap-3 p-3 text-left hover:bg-[#21262d] transition-colors"
+                      >
+                        <div className="mt-0.5">
+                          {isExpanded ? (
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-gray-500"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                          ) : (
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-gray-500"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <SeverityBadge type={issue.severity} />
+                            {issue.line && <span className="text-xs text-gray-500 font-mono">Line {issue.line}</span>}
                           </div>
-                          <p className="text-sm text-slate-300 mb-2 leading-relaxed">
-                            {issue.description}
-                          </p>
-                          <div className="flex gap-2 text-xs text-slate-500">
-                            <span className="text-violet-400 font-bold flex-shrink-0">FIX</span>
+                          <p className="text-sm text-gray-200 line-clamp-2">{issue.description}</p>
+                        </div>
+                      </button>
+
+                      {/* Issue Details */}
+                      {isExpanded && (
+                        <div className="p-3 bg-[#0d1117] border-t border-[#30363d]">
+                          <p className="text-xs text-gray-400 mb-2">Suggestion</p>
+                          <div className="bg-[#161b22] border border-[#30363d] rounded p-3 text-sm text-gray-300 font-mono whitespace-pre-wrap">
                             {issue.fix}
                           </div>
                         </div>
-                      )
-                    })}
-                  </div>
-                ) : (
-                  <p className="text-center text-slate-600 text-sm py-8">✅ No issues found</p>
-                )
-              )}
-
-              {/* Improvements Tab */}
-              {activeTab === 'improvements' && (
-                output.improvements?.length > 0 ? (
-                  <div className="divide-y divide-gray-800">
-                    {output.improvements.map((tip, i) => (
-                      <div key={i} className="flex gap-3 py-3 text-sm text-slate-400 leading-relaxed">
-                        <span className="text-violet-400 font-mono font-semibold text-xs mt-0.5 flex-shrink-0">
-                          {String(i + 1).padStart(2, '0')}
-                        </span>
-                        {tip}
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-center text-slate-600 text-sm py-8">No suggestions available</p>
-                )
-              )}
-
-              {/* Optimized Code Tab */}
-              {activeTab === 'code' && (
-                output.optimizedCode ? (
-                  <>
-                    <div className="flex items-center justify-between mb-3">
-                      <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                        Refactored Version
-                      </span>
-                      <button
-                        onClick={copyCode}
-                        className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg border transition-all ${
-                          copied
-                            ? 'border-green-500/40 text-green-400 bg-green-500/10'
-                            : 'border-gray-700 text-slate-400 bg-gray-800 hover:border-violet-500/40 hover:text-violet-400'
-                        }`}
-                      >
-                        {copied ? '✓ Copied' : '⎘ Copy'}
-                      </button>
+                      )}
                     </div>
-                    <pre className="bg-gray-950 border border-gray-800 rounded-lg p-4 overflow-x-auto text-xs text-cyan-300 font-mono leading-relaxed whitespace-pre">
-                      {output.optimizedCode}
-                    </pre>
-                  </>
-                ) : (
-                  <p className="text-center text-slate-600 text-sm py-8">
-                    No optimized version available
-                  </p>
-                )
-              )}
-
-            </div>
+                  )
+                })}
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-[#22c55e] mx-auto mb-3"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                <p className="text-gray-400 text-sm">No issues found. Great job!</p>
+              </div>
+            )}
+            
+            {/* Tips / Improvements */}
+            {output.improvements?.length > 0 && (
+              <div className="mt-8">
+                <h3 className="text-white text-sm font-medium mb-3">General Tips</h3>
+                <ul className="space-y-2">
+                  {output.improvements.map((tip, i) => (
+                    <li key={i} className="flex gap-2 text-sm text-gray-400 items-start">
+                      <span className="text-[#3b82f6] mt-0.5">•</span>
+                      {tip}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
-        )}
-
-      </div>
+        </div>
+      )}
     </div>
   )
 }

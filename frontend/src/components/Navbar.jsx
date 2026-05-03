@@ -1,121 +1,101 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
 
-const Navbar = ({ user }) => {
+const Navbar = () => {
   const { pathname } = useLocation()
+  const { user, Logout } = useAuth()
+  const [dropdownOpen, setDropdownOpen] = useState(false)
 
   const links = [
-    {
-      to: '/profile',
-      label: 'Profile',
-      icon: (
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
-          <circle cx="12" cy="7" r="4"/>
-        </svg>
-      ),
-    },
-    {
-      to: '/history',
-      label: 'History',
-      icon: (
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <circle cx="12" cy="12" r="10"/>
-          <polyline points="12 6 12 12 16 14"/>
-        </svg>
-      ),
-    },
+    { to: '/home', label: 'Home' },
+    { to: '/history', label: 'History' },
+    { to: '/profile', label: 'Profile' },
   ]
 
   const getInitials = (name) =>
     name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) ?? '?'
 
   return (
-    <>
-      <style>{`
-        @keyframes slide-down {
-          from { opacity: 0; transform: translateY(-12px); }
-          to   { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes ping-dot {
-          0%,100% { transform: scale(1); opacity: 0.7; }
-          50%      { transform: scale(1.8); opacity: 0; }
-        }
-        .navbar    { animation: slide-down 0.5s cubic-bezier(.22,1,.36,1) both; }
-        .ping-anim { animation: ping-dot 1.8s ease-in-out infinite; }
-        .nav-link  { transition: color 0.15s ease, background 0.15s ease, border-color 0.15s ease; }
-      `}</style>
-
-      <nav className="navbar sticky top-0 z-50 w-full border-b border-white/[0.07] backdrop-blur-xl bg-white/[0.04]">
-
-        {/* top glow line — same as login/profile cards */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-72 h-px bg-gradient-to-r from-transparent via-violet-500/50 to-transparent pointer-events-none" />
-
-        <div className="max-w-5xl mx-auto px-6 h-16 flex items-center justify-between">
-
-          {/* ── Logo ── */}
-          <Link to="/home" className="flex items-center gap-2.5 no-underline flex-shrink-0">
-            <div className="w-[34px] h-[34px] rounded-[10px] bg-gradient-to-br from-violet-600 to-blue-600 flex items-center justify-center shadow-lg shadow-violet-900/30">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
-                <path d="M7 8L3 12L7 16" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M17 8L21 12L17 16" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M14 4L10 20" stroke="rgba(255,255,255,0.55)" strokeWidth="1.8" strokeLinecap="round"/>
-              </svg>
-            </div>
-            <span className="text-white font-bold text-[15px] tracking-tight">
-              Code<span className="text-violet-400">Review</span>.ai
-            </span>
+    <nav className="sticky top-0 z-50 w-full border-b border-[#30363d] bg-[#0d1117]">
+      <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
+        
+        {/* Left side: Logo + Links */}
+        <div className="flex items-center gap-8">
+          {/* Logo */}
+          <Link to="/home" className="flex items-center gap-2 no-underline text-white font-bold tracking-tight text-lg">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-blue-500">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <polyline points="14 2 14 8 20 8"></polyline>
+              <line x1="16" y1="13" x2="8" y2="13"></line>
+              <line x1="16" y1="17" x2="8" y2="17"></line>
+              <polyline points="10 9 9 9 8 9"></polyline>
+            </svg>
+            CodeReview<span className="text-blue-500">.ai</span>
           </Link>
 
-          {/* ── Nav links ── */}
-          <div className="flex items-center gap-1.5">
-            {links.map(({ to, label, icon }) => {
-              const active = pathname === to
+          {/* Nav links */}
+          <div className="hidden md:flex items-center gap-1">
+            {links.map(({ to, label }) => {
+              const active = pathname.startsWith(to)
               return (
                 <Link
                   key={to}
                   to={to}
-                  className={`nav-link flex items-center gap-2 px-3.5 py-2 rounded-xl border text-[13px] font-medium no-underline
-                    ${active
-                      ? 'text-violet-400 bg-violet-500/10 border-violet-500/20'
-                      : 'text-slate-500 border-transparent hover:text-violet-400 hover:bg-violet-500/8'
-                    }`}
+                  className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                    active 
+                      ? 'text-white bg-[#161b22]' 
+                      : 'text-gray-400 hover:text-white hover:bg-[#161b22]'
+                  }`}
                 >
-                  {icon}
                   {label}
                 </Link>
               )
             })}
           </div>
-
-          {/* ── Avatar ── */}
-          <div className="relative flex-shrink-0 cursor-pointer">
-            <div
-              className="p-[1.5px] rounded-full bg-gradient-to-br from-violet-600 to-blue-600"
-              style={{ boxShadow: '0 0 0 3px rgba(139,92,246,0.15)' }}
-            >
-              {user?.avatar ? (
-                <img
-                  src={user.avatar}
-                  alt={user.name}
-                  className="w-[34px] h-[34px] rounded-full object-cover block"
-                />
-              ) : (
-                <div className="w-[34px] h-[34px] rounded-full bg-gradient-to-br from-violet-900 to-blue-900 flex items-center justify-center text-[12px] font-bold text-white">
-                  {getInitials(user?.name)}
-                </div>
-              )}
-            </div>
-
-            {/* online dot */}
-            <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-gray-950 flex items-center justify-center">
-              <span className="ping-anim absolute w-full h-full rounded-full bg-emerald-400" />
-            </span>
-          </div>
-
         </div>
-      </nav>
-    </>
+
+        {/* Right side: Avatar dropdown */}
+        <div className="relative">
+          <button 
+            onClick={() => setDropdownOpen(!dropdownOpen)}
+            className="flex items-center justify-center w-8 h-8 rounded-full bg-[#161b22] border border-[#30363d] focus:outline-none focus:ring-2 focus:ring-blue-500 overflow-hidden"
+          >
+            {user?.avatar ? (
+              <img src={user.avatar} alt="avatar" className="w-full h-full object-cover" />
+            ) : (
+              <span className="text-xs text-white font-bold">{getInitials(user?.name)}</span>
+            )}
+          </button>
+
+          {dropdownOpen && (
+            <div className="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-[#161b22] border border-[#30363d] py-1 z-50">
+              <div className="px-4 py-2 border-b border-[#30363d] mb-1">
+                <p className="text-sm text-white font-medium truncate">{user?.name || 'User'}</p>
+                <p className="text-xs text-gray-400 truncate">{user?.email || ''}</p>
+              </div>
+              <Link 
+                to="/profile" 
+                onClick={() => setDropdownOpen(false)}
+                className="block px-4 py-2 text-sm text-gray-300 hover:bg-[#30363d] hover:text-white"
+              >
+                Your Profile
+              </Link>
+              <button 
+                onClick={() => {
+                  setDropdownOpen(false);
+                  Logout();
+                }}
+                className="w-full text-left block px-4 py-2 text-sm text-red-400 hover:bg-[#30363d] hover:text-red-300"
+              >
+                Sign out
+              </button>
+            </div>
+          )}
+        </div>
+
+      </div>
+    </nav>
   )
 }
 
