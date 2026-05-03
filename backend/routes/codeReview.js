@@ -32,7 +32,7 @@ router.post('/review', reviewLimiter, authMiddleware, async (req, res) => {
       if (model === 'hugging-face') {
         result = await huggingFaceGenerateResponse(original_code);
       } else if (model === 'groq') {
-        result = await grokGenerateResponse(original_code);
+        result = await groqGenerateResponse(original_code);
       } else {
         
         result = await geminiGenerateResponse(original_code);

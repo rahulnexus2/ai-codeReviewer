@@ -4,7 +4,7 @@ dotenv.config();
 
 export const generateResponse = async (userInput) => {
   try {
-    const prompt = `You are a senior software engineer and code reviewer.
+     const prompt = `You are a senior software engineer and code reviewer.
 
 Your task is to review the following code thoroughly and provide a structured analysis.
 
@@ -53,35 +53,42 @@ CRITICAL: Return ONLY raw valid JSON. No markdown, no backticks, no \`\`\`json f
 ### Code to review:
 ${userInput}`;
 
+   
+
     if (!process.env.HUGGINGFACE_API_KEY) {
       throw new Error("Missing HUGGINGFACE_API_KEY in environment variables");
     }
 
-    const response = await axios.post(
-      "https://api-inference.huggingface.co/models/meta-llama/Meta-Llama-3-8B-Instruct",
+    
+const response = await axios.post(
+  // Line 1 - URL
+"https://router.huggingface.co/v1/chat/completions",
+
+
+  {                                              
+   model: "meta-llama/Llama-3.1-8B-Instruct:cerebras",
+    messages: [
       {
-        inputs: prompt,
-        parameters: {
-          max_new_tokens: 1500,
-          return_full_text: false,
-        }
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${process.env.HUGGINGFACE_API_KEY}`,
-          "Content-Type": "application/json",
-        },
+        role: "user",
+        content: prompt
       }
-    );
+    ],
+    max_tokens: 1500,
+    temperature: 0.2,
+    stream: false
+  },                                             // ✅ body object closes here
+  {
+    headers: {
+      Authorization: `Bearer ${process.env.HUGGINGFACE_API_KEY}`,
+      "Content-Type": "application/json",
+    },
+    timeout: 60000
+  }
+);
 
-    // HF Inference API text generation usually returns [{ generated_text: "..." }]
-    let raw = "";
-    if (Array.isArray(response.data) && response.data.length > 0) {
-      raw = response.data[0].generated_text;
-    } else {
-      raw = JSON.stringify(response.data);
-    }
+const raw = response.data.choices[0].message.content;
 
+    // Clean markdown if model still returns it
     const cleaned = raw
       .trim()
       .replace(/^```json\s*/i, "")
@@ -96,7 +103,7 @@ ${userInput}`;
       console.error("JSON parse failed. Raw response:", raw);
       parsed = {
         type: "general",
-        summary: "Could not parse structured response from Hugging Face model",
+        summary: "Could not parse structured response",
         issues: [],
         improvements: [],
         optimizedCode: null,
@@ -107,7 +114,7 @@ ${userInput}`;
     return { success: true, data: parsed };
 
   } catch (error) {
-    console.error("Hugging Face error:", error.response?.data || error.message);
+    console.error("Groq error:", error.response?.data || error.message);
     return { success: false, error: error.message };
   }
 };

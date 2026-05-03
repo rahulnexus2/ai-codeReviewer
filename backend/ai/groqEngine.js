@@ -10,36 +10,43 @@ Your task is to review the following code thoroughly and provide a structured an
 
 ### Instructions:
 
-1. Understand the code first – explain briefly what the code is doing.
-2. Check for errors and bugs
-   - Syntax errors
-   - Logical mistakes
-   - Edge cases that may break the code
-3. Evaluate code quality
-   - Readability, Maintainability
-   - Proper naming conventions
-   - Code structure and modularity
-4. Check best practices
-   - Language-specific best practices
-   - Security issues (if any)
-   - Performance concerns
-5. Optimization
-   - Suggest improvements if the code is not optimal
-6. Refactored version
-   - Provide a cleaner, optimized version of the code
-7. Score generation
-   - Generate an integer score between 0 and 100 representing the overall quality of the code.
+1. **Understand the code first** – explain briefly what the code is doing.
+2. **Check for errors and bugs**
+   * Syntax errors
+   * Logical mistakes
+   * Edge cases that may break the code
+3. **Evaluate code quality**
+   * Readability, Maintainability
+   * Proper naming conventions
+   * Code structure and modularity
+4. **Check best practices**
+   * Language-specific best practices
+   * Security issues (if any)
+   * Performance concerns
+5. **Optimization**
+   * Suggest improvements if the code is not optimal
+6. **Refactored version**
+   * Provide a cleaner, optimized version of the code
+7. **Score generation**
+   * Generate an integer score between 0 and 100 representing the overall quality of the code.
 
-CRITICAL: Return ONLY raw valid JSON.
+CRITICAL: Return ONLY raw valid JSON. No markdown, no backticks, no \`\`\`json fences, no explanation outside JSON.
 
-### Output format:
+### Output format (strict JSON):
 {
   "type": "code_review",
   "score": 85,
-  "summary": "short explanation",
-  "issues": [],
-  "improvements": [],
-  "optimizedCode": "refactored code",
+  "summary": "short explanation of what the code does",
+  "issues": [
+    {
+      "line": "approximate line number or snippet reference",
+      "description": "issue description",
+      "severity": "error | warning | info",
+      "fix": "how to fix"
+    }
+  ],
+  "improvements": ["suggestion 1", "suggestion 2"],
+  "optimizedCode": "refactored code here",
   "finalAnswer": null
 }
 
@@ -51,9 +58,9 @@ ${userInput}`;
     }
 
     const response = await axios.post(
-     "https://api.groq.com/openai/v1/chat/completions",,
+     "https://api.groq.com/openai/v1/chat/completions",
       {
-        model: "llama3-70b-8192", 
+        model: "llama-3.3-70b-versatile",
         messages: [
           { role: "system", content: "You are a strict JSON-only coding assistant." },
           { role: "user", content: prompt }
