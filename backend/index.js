@@ -10,38 +10,32 @@ import codeCrud from "./routes/codeCrud.js"
 import cors from "cors"
 import cookieParser from "cookie-parser";
 
+const app = express();
+const port = 8000;
 
+// 1. DATABASE INITIALIZATION
 await createTable();
 await createCodeTable();
 
-const port =8000
-const app=express()
-
-//app.use("/code",express.text({ type: "*/*" }),codeReview)
-app.use(cookieParser())
-
-app.use(express.json())
+// 2. GLOBAL MIDDLEWARE (The "Gatekeepers")
+// These MUST be defined before your app.use routes
 app.use(cors({
-  origin:"http://localhost:5173",
-  credentials:true
-}))
+  origin: "http://localhost:5173",
+  credentials: true
+}));
+app.use(cookieParser());
+app.use(express.json()); // <--- CRITICAL: This MUST come before routes
 
-app.get('/',(req,res)=>{
-  res.send('hey welome to my app')
-})
+// 3. ROUTES (The "End-Points")
+app.get('/', (req, res) => {
+  res.send('hey welcome to my app')
+});
 
+app.use("/auth", authGoogle);
+app.use("/user", userRoutes);
+app.use("/code", codeReview); // Now this route will have access to req.body
+app.use("/codereview", codeCrud);
 
-
-
-app.use("/auth",authGoogle)
-app.use("/user",userRoutes)
-app.use("/code",codeReview)
-app.use("/codereview",codeCrud)
-
-
-
-
-app.listen(port,()=>{
-  console.log(`app is listening at port ${port}`)
-})
-
+app.listen(port, () => {
+  console.log(`app is listening at port ${port}`);
+});

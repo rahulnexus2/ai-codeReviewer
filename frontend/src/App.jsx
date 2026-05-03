@@ -7,11 +7,7 @@ import { AuthProvider } from './context/AuthCOntext.jsx'
 const App = () => {
   return (
     <div>
-    
-      
-      <RouterProvider router={router}/>
-      
-      
+      <RouterProvider router={router}/>      
     </div>
   )
 }

@@ -7,7 +7,7 @@ const createCodeTable = async () => {
       CREATE TABLE IF NOT EXISTS code (
         id SERIAL PRIMARY KEY,
         user_id INTEGER,
-        language TEXT,
+        model TEXT,
         original_code TEXT,
         ai_feedback JSONB,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
