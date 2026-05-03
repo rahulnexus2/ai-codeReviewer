@@ -1,5 +1,7 @@
 import express from "express" 
-import { generateResponse } from "../ai/geminiResEngine.js"
+import { generateResponse as geminiGenerateResponse } from "../ai/geminiResEngine.js"
+import { generateResponse as huggingFaceGenerateResponse } from "../ai/huggingFaceEngine.js"
+import { generateResponse as groqGenerateResponse } from "../ai/groqEngine.js"
 import authMiddleware from "../middlewares/authMiddleware.js";
 import pool from "../database/db.js";
 import reviewLimiter from "../middlewares/ratelimiter.js";
@@ -27,22 +29,28 @@ router.post('/review', reviewLimiter, authMiddleware, async (req, res) => {
    
     let result;
     try {
-      if(model=='gemin-flash-2.5')
-        result = await generateResponse(original_code);
+      if (model === 'hugging-face') {
+        result = await huggingFaceGenerateResponse(original_code);
+      } else if (model === 'groq') {
+        result = await grokGenerateResponse(original_code);
+      } else {
+        
+        result = await geminiGenerateResponse(original_code);
+      }
       
     } catch (aiErr) {
-      console.error("AI engine threw:", aiErr); // ← pinpoints Gemini errors
+      console.error("AI engine threw:", aiErr); 
       return res.status(502).json({ error: "AI service failed" });
     }
 
     if (!result?.success || !result?.data) {
-      console.error("AI bad response shape:", result); // ← shows what it returned
+      console.error("AI bad response shape:", result); 
       return res.status(500).json({ error: result?.error || "AI returned no data" });
     }
 
     const ai_feedback = result.data;
 
-    // DB Insert
+    
     let dbResult;
     try {
       dbResult = await pool.query(

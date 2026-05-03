@@ -5,7 +5,7 @@ const createTable=async()=>{
     await pool.query(`
       CREATE TABLE IF NOT EXISTS users (
         id SERIAL PRIMARY KEY,
-         google_id TEXT UNIQUE,
+        google_id TEXT UNIQUE,
         name TEXT,
         email TEXT UNIQUE,
         avatar TEXT,

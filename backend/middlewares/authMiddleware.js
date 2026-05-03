@@ -12,7 +12,7 @@ const authMiddleware=async (req,res,next)=>{
    
 
   const result = await pool.query(
-      "SELECT id, email, name FROM users WHERE id = $1",
+      "SELECT id, email, name, avatar FROM users WHERE id = $1",
       [decoded.id]
     );
 

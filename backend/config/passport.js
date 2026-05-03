@@ -25,7 +25,11 @@ async (accessToken, refreshToken, profile, done) => {
         );
 
         if (userResult.rows.length > 0) {
-          return done(null, userResult.rows[0]);
+          const updated = await pool.query(
+            "UPDATE users SET avatar = $1 WHERE google_id = $2 RETURNING *",
+            [avatar, googleId]
+          )
+          return done(null, updated.rows[0]);
         }
 
         const newUser = await pool.query(

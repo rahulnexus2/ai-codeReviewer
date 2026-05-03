@@ -40,8 +40,7 @@ export default function CodeEditor() {
       setLoading(false)
     }
   }
-
-  const copyCode = () => {
+    const copyCode = () => {
     navigator.clipboard.writeText(output?.optimizedCode || '')
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
